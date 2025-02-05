@@ -1,3 +1,3 @@
 public struct EquatableVoid: Equatable, Sendable {
-	public init() {}
+    public init() {}
 }
