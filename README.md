@@ -26,6 +26,9 @@ import xRedux
 
 You can now start using `xRedux` to manage your application state.
 
+## Examples
+![Sample feature](/Example) with a reducer handling data fetching and user actions. Full testing coverage with Swift Testing.
+
 ## 👨💻 Author
 
 Xavier Vicient Manteca
