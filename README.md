@@ -1,6 +1,7 @@
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org) [![Platform](https://img.shields.io/badge/Platform-iOS_17+-blue.svg)](https://developer.apple.com/ios/) [![License](https://img.shields.io/badge/License-Proprietary-lightgrey.svg)](LICENSE)
+
 # xRedux
 
-## Description
 `xRedux` is a state management library for Swift applications, inspired by Redux architecture. It provides a predictable state container that helps manage application state in a consistent and maintainable way.
 
 ## Installation
@@ -24,3 +25,13 @@ import xRedux
 ```
 
 You can now start using `xRedux` to manage your application state.
+
+## 👨💻 Author
+
+Xavier Vicient Manteca
+
+[GitHub Profile](https://github.com/xvicient) • [LinkedIn](https://www.linkedin.com/in/xvicient/)
+
+## © License
+
+This project is proprietary software. All rights reserved © 2025 Xavier Vicient Manteca. Unauthorized distribution is prohibited.
