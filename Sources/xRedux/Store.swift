@@ -3,9 +3,9 @@ import SwiftUI
 
 /// A class that manages the state and handles actions in a Redux-style architecture
 /// Conforms to ObservableObject to enable SwiftUI view updates
-public final class Store<R: Reducer>: ObservableObject {
+@Observable public final class Store<R: Reducer> {
     /// The current state of the application, published to enable view updates
-	@Published private(set) public var state: R.State
+	private(set) public var state: R.State
     /// The reducer that processes actions and updates state
 	private let reducer: R
     /// Set of cancellables to manage publisher lifecycles
