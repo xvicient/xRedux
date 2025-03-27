@@ -17,6 +17,7 @@ struct HomeReducer: Reducer {
     enum ViewState: Equatable {
         case idle
         case loading
+        case error
     }
     
     private let useCase: HomeUseCaseApi
@@ -43,6 +44,10 @@ struct HomeReducer: Reducer {
         case (.loading, .fetchItemsResult(.success(let items))):
             state.viewState = .idle
             state.items = items
+            return .none
+            
+        case (.loading, .fetchItemsResult(.failure)):
+            state.viewState = .error
             return .none
             
         case (.idle, .didTapItem(let id)):
