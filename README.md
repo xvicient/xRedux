@@ -29,6 +29,9 @@ You can now start using `xRedux` to manage your application state.
 ## Examples
 [GroceryApp](/Examples/GroceryApp) Full app with a reducer handling data fetching and user actions. Full testing coverage with Swift Testing.
 
+## Documentation
+[Doc](https://deepwiki.com/xvicient/xRedux) for the entire repository.
+
 ## Author
 
 Xavier Vicient Manteca
