@@ -25,34 +25,34 @@ public final class TestStore<State, Action> where Action: Equatable {
 		assert expectation: ((_ state: State) -> Bool)
 	) async {
 		store.send(action)
-        assert(reducer.expectedAction == action)
-        assert(expectation(reducer.expectedState))
+        precondition(reducer.expectedAction == action)
+        precondition(expectation(reducer.expectedState))
 	}
 
     public func receive(
-		timeout: Int = 5000,
+		timeout milliseconds: Int = 5000,
 		_ action: Action,
 		assert expectation: @escaping ((_ state: State) -> Bool)
 	) async {
 		var expectedResultReceived = false
-		var elapsedTime: UInt64 = 0
-		let pace: UInt64 = 100
+		var elapsedMilliseconds = 0
+		let paceMilliseconds = 100
 
 		reducer.expectedResult = (
 			action,
 			{ [weak self] in
 				guard let self else { return }
-                assert(reducer.expectedAction == action)
-                assert(expectation(reducer.expectedState))
+                precondition(reducer.expectedAction == action)
+                precondition(expectation(reducer.expectedState))
 				expectedResultReceived = true
 			}
 		)
 
-		while !expectedResultReceived && elapsedTime < timeout {
-			elapsedTime += pace
-			try? await Task.sleep(nanoseconds: pace)
+		while !expectedResultReceived && elapsedMilliseconds < milliseconds {
+			elapsedMilliseconds += paceMilliseconds
+			try? await Task.sleep(nanoseconds: UInt64(paceMilliseconds) * 1_000_000)
 		}
 
-        assert(expectedResultReceived, "Timeout waiting for expected action")
+        precondition(expectedResultReceived, "Timeout waiting for expected action")
 	}
 }

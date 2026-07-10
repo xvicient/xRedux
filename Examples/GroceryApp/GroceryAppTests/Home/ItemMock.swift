@@ -1,7 +1,7 @@
 @testable import GroceryApp
 
-struct ItemMock {    
+struct ItemMock {
     static var items: [Item] {
-        Array(repeating: Item(name: "Test item", completed: true), count: 10)
+        (0..<10).map { _ in Item(name: "Test item", completed: true) }
     }
 }

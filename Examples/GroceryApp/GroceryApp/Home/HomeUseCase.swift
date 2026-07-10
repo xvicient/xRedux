@@ -1,12 +1,14 @@
+import Combine
 import xRedux
 
 protocol HomeUseCaseApi {
-    func fetchItems() async -> ActionResult<[Item]>
+    func fetchItems() -> AnyPublisher<[Item], Error>
+    func updateItem(_ item: Item) async -> ActionResult<EquatableVoid>
 }
 
 struct HomeUseCase: HomeUseCaseApi {
-    func fetchItems() async -> ActionResult<[Item]> {
-        .success([
+    func fetchItems() -> AnyPublisher<[Item], Error> {
+        Just([
             Item(name: "Apples", completed: false),
             Item(name: "Bananas", completed: false),
             Item(name: "Bread", completed: false),
@@ -17,5 +19,12 @@ struct HomeUseCase: HomeUseCaseApi {
             Item(name: "Pasta", completed: false),
             Item(name: "Tomatoes", completed: false),
         ])
+        .setFailureType(to: Error.self)
+        .eraseToAnyPublisher()
+    }
+
+    func updateItem(_ item: Item) async -> ActionResult<EquatableVoid> {
+        // Simulates persisting the toggle through a network call.
+        .success()
     }
 }

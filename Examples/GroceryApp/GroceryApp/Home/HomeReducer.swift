@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import xRedux
 
@@ -33,30 +34,39 @@ struct HomeReducer: Reducer {
         switch (state.viewState, action) {
         case (.idle, .onAppear):
             state.viewState = .loading
-            return .task { send in
-                await send(
-                    .fetchItemsResult(
-                        useCase.fetchItems()
-                    )
-                )
-            }
-            
+            return .publish(
+                useCase.fetchItems()
+                    .map { Action.fetchItemsResult(.success($0)) }
+                    .catch { Just(Action.fetchItemsResult(.failure($0))) }
+                    .eraseToAnyPublisher()
+            )
+
         case (.loading, .fetchItemsResult(.success(let items))):
             state.viewState = .idle
             state.items = items
             return .none
-            
+
         case (.loading, .fetchItemsResult(.failure)):
             state.viewState = .error
             return .none
-            
+
         case (.idle, .didTapItem(let id)):
             guard let index = state.items.firstIndex(where: { $0.id == id }) else {
                 return .none
             }
             state.items[index].completed.toggle()
+            let item = state.items[index]
+            return .task { send in
+                await send(
+                    .voidResult(
+                        useCase.updateItem(item)
+                    )
+                )
+            }
+
+        case (_, .voidResult):
             return .none
-            
+
         default:
             print("No matching ViewState and Action")
             return .none

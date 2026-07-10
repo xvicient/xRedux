@@ -8,8 +8,8 @@ import SwiftUI
 	private(set) public var state: R.State
     /// The reducer that processes actions and updates state
 	private let reducer: R
-    /// Set of cancellables to manage publisher lifecycles
-	private var cancellables: Set<AnyCancellable> = []
+    /// Cancellables keyed by subscription id, so each is removed as soon as its publisher completes
+	private var cancellables: [UUID: AnyCancellable] = [:]
 
     /// Creates a new Store with an initial state and reducer
     /// - Parameters:
@@ -35,14 +35,21 @@ import SwiftUI
 		case .none:
 			break
 		case .publish(let publisher):
-			publisher
+			let id = UUID()
+			cancellables[id] = publisher
 				.receive(on: DispatchQueue.main)
-				.sink(receiveValue: send)
-				.store(in: &cancellables)
+				.sink(
+					receiveCompletion: { [weak self] _ in
+						self?.cancellables[id] = nil
+					},
+					receiveValue: { [weak self] action in
+						self?.send(action)
+					}
+				)
 		case .task(let task):
-			Task {
+			Task { [weak self] in
 				await task { action in
-					self.send(action)
+					self?.send(action)
 				}
 			}
 		}

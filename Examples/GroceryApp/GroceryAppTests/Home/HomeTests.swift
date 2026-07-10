@@ -66,6 +66,10 @@ struct HomeTests {
         await store.send(.didTapItem(item.id)) {
             $0.viewState == .idle && $0.items[0].completed == item.completed
         }
+
+        await store.receive(.voidResult(useCaseMock.updateItemResult)) {
+            $0.viewState == .idle
+        }
     }
 
 }
