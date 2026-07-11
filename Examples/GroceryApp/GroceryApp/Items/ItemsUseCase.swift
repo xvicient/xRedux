@@ -1,13 +1,10 @@
 import Combine
 import xRedux
 
-protocol HomeUseCaseApi {
-    func fetchItems() -> AnyPublisher<[Item], Error>
-    func updateItem(_ item: Item) async -> ActionResult<EquatableVoid>
-}
+protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item {}
 
-struct HomeUseCase: HomeUseCaseApi {
-    func fetchItems() -> AnyPublisher<[Item], Error> {
+struct ItemsUseCase: ItemsUseCaseApi {
+    func fetchElements() -> AnyPublisher<[Item], Error> {
         Just([
             Item(name: "Apples", completed: false),
             Item(name: "Bananas", completed: false),
@@ -23,7 +20,7 @@ struct HomeUseCase: HomeUseCaseApi {
         .eraseToAnyPublisher()
     }
 
-    func updateItem(_ item: Item) async -> ActionResult<EquatableVoid> {
+    func updateElement(_ element: Item) async -> ActionResult<EquatableVoid> {
         // Simulates persisting the toggle through a network call.
         .success()
     }

@@ -2,31 +2,49 @@ import Combine
 import Foundation
 import xRedux
 
-struct HomeReducer: Reducer {
-    enum Action: Equatable {
+/// A row that can be displayed in a list and marked as completed
+protocol ToggleableItem: Identifiable, Equatable, Sendable where ID == UUID {
+    var completed: Bool { get set }
+}
+
+/// Use case requirements shared by any feature that fetches a list of rows and lets the user
+/// toggle each row's completion state
+protocol ToggleableUseCaseApi {
+    associatedtype Element: ToggleableItem
+
+    func fetchElements() -> AnyPublisher<[Element], Error>
+    func updateElement(_ element: Element) async -> ActionResult<EquatableVoid>
+}
+
+/// Reducer shared by any feature that is "a list of rows the user can mark as completed"
+/// (e.g. the items of a grocery list, or the grocery lists themselves)
+struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
+    typealias Element = UseCase.Element
+
+    enum Action: Equatable, Sendable {
         case onAppear
-        case didTapItem(UUID)
-        case fetchItemsResult(ActionResult<[Item]>)
+        case didTapItem(Element.ID)
+        case fetchItemsResult(ActionResult<[Element]>)
         case voidResult(ActionResult<EquatableVoid>)
     }
-    
+
     struct State {
         var viewState: ViewState = .idle
-        var items = [Item]()
+        var items = [Element]()
     }
-    
+
     enum ViewState: Equatable {
         case idle
         case loading
         case error
     }
-    
-    private let useCase: HomeUseCaseApi
-    
-    init(useCase: HomeUseCaseApi) {
+
+    private let useCase: UseCase
+
+    init(useCase: UseCase) {
         self.useCase = useCase
     }
-    
+
     func reduce(
         _ state: inout State,
         _ action: Action
@@ -35,7 +53,7 @@ struct HomeReducer: Reducer {
         case (.idle, .onAppear):
             state.viewState = .loading
             return .publish(
-                useCase.fetchItems()
+                useCase.fetchElements()
                     .map { Action.fetchItemsResult(.success($0)) }
                     .catch { Just(Action.fetchItemsResult(.failure($0))) }
                     .eraseToAnyPublisher()
@@ -59,7 +77,7 @@ struct HomeReducer: Reducer {
             return .task { send in
                 await send(
                     .voidResult(
-                        useCase.updateItem(item)
+                        useCase.updateElement(item)
                     )
                 )
             }
@@ -71,21 +89,5 @@ struct HomeReducer: Reducer {
             print("No matching ViewState and Action")
             return .none
         }
-    }
-}
-
-extension Store<HomeReducer> {
-    var pendingItems: [Item] {
-        get {
-            state.items.filter { !$0.completed }
-        }
-        set { }
-    }
-    
-    var completedItems: [Item] {
-        get {
-            state.items.filter { $0.completed }
-        }
-        set { }
     }
 }

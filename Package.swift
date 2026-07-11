@@ -30,6 +30,13 @@ let package = Package(
                 "xRedux"
             ],
             path: "Sources/xReduxTest"
+        ),
+        .testTarget(
+            name: "xReduxTests",
+            dependencies: [
+                "xRedux"
+            ],
+            path: "Tests/xReduxTests"
         )
     ]
 )

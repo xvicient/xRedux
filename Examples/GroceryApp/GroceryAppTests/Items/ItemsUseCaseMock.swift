@@ -3,12 +3,12 @@ import xRedux
 
 @testable import GroceryApp
 
-class HomeUseCaseMock: HomeUseCaseApi {
+class ItemsUseCaseMock: ItemsUseCaseApi {
 
     var fetchItemsResult: ActionResult<[Item]>!
     var updateItemResult: ActionResult<EquatableVoid> = .success()
 
-    func fetchItems() -> AnyPublisher<[Item], Error> {
+    func fetchElements() -> AnyPublisher<[Item], Error> {
         switch fetchItemsResult! {
         case .success(let items):
             return Just(items).setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -17,8 +17,7 @@ class HomeUseCaseMock: HomeUseCaseApi {
         }
     }
 
-    func updateItem(_ item: Item) async -> ActionResult<EquatableVoid> {
+    func updateElement(_ element: Item) async -> ActionResult<EquatableVoid> {
         updateItemResult
     }
 }
-    
