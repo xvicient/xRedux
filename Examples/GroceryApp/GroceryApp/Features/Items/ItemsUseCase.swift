@@ -1,7 +1,9 @@
 import Combine
 import xRedux
 
-protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item {}
+protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item {
+    func deleteElement(_ element: Item) async -> ActionResult<EquatableVoid>
+}
 
 struct ItemsUseCase: ItemsUseCaseApi {
     func fetchElements() -> AnyPublisher<[Item], Error> {
@@ -21,7 +23,12 @@ struct ItemsUseCase: ItemsUseCaseApi {
     }
 
     func updateElement(_ element: Item) async -> ActionResult<EquatableVoid> {
-        // Simulates persisting the toggle through a network call.
+        // Simulates a network call.
+        .success()
+    }
+
+    func deleteElement(_ element: Item) async -> ActionResult<EquatableVoid> {
+        // Simulates a network call.
         .success()
     }
 }

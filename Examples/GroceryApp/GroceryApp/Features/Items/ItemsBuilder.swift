@@ -4,9 +4,8 @@ import xRedux
 struct ItemsBuilder {
     static func makeItems(for list: GroceryList) -> some View {
         ItemsView(
-            listName: list.name,
             store: Store(
-                initialState: .init(),
+                initialState: .init(listName: list.name),
                 reducer: ItemsReducer(
                     useCase: ItemsUseCase()
                 )

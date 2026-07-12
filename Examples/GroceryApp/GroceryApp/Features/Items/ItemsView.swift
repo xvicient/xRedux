@@ -2,12 +2,10 @@ import SwiftUI
 import xRedux
 
 struct ItemsView: View {
-    let listName: String
-    @State private var store: Store<ItemsReducer>
+    @Bindable private var store: Store<ItemsReducer<ItemsUseCase>>
 
-    init(listName: String, store: Store<ItemsReducer>) {
-        self.listName = listName
-        self._store = State(initialValue: store)
+    init(store: Store<ItemsReducer<ItemsUseCase>>) {
+        self.store = store
     }
 
     var body: some View {
@@ -23,16 +21,16 @@ struct ItemsView: View {
                 }
             }
         }
-        .navigationTitle(listName)
+        .navigationTitle(store.state.listName)
         .onAppear {
-            store.send(.onAppear)
+            store.send(.shared(.onAppear))
         }
     }
 
     private func row(for item: Item) -> some View {
         HStack {
             Button(action: {
-                store.send(.didTapItem(item.id))
+                store.send(.shared(.didTapItem(item.id)))
             }) {
                 Image(systemName: item.completed ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(item.completed ? .green : .gray)
@@ -44,6 +42,13 @@ struct ItemsView: View {
                 .foregroundColor(item.completed ? .gray : .primary)
         }
         .padding(.vertical, 4)
+        .swipeActions {
+            Button(role: .destructive) {
+                store.send(.didDeleteItem(item.id))
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 }
 

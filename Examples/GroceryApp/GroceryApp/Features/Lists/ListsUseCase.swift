@@ -15,7 +15,7 @@ struct ListsUseCase: ListsUseCaseApi {
     }
 
     func updateElement(_ element: GroceryList) async -> ActionResult<EquatableVoid> {
-        // Simulates persisting the toggle through a network call.
+        // Simulates a network call.
         .success()
     }
 }

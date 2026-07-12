@@ -7,6 +7,7 @@ class ItemsUseCaseMock: ItemsUseCaseApi {
 
     var fetchItemsResult: ActionResult<[Item]>!
     var updateItemResult: ActionResult<EquatableVoid> = .success()
+    var deleteItemResult: ActionResult<EquatableVoid> = .success()
 
     func fetchElements() -> AnyPublisher<[Item], Error> {
         switch fetchItemsResult! {
@@ -19,5 +20,9 @@ class ItemsUseCaseMock: ItemsUseCaseApi {
 
     func updateElement(_ element: Item) async -> ActionResult<EquatableVoid> {
         updateItemResult
+    }
+
+    func deleteElement(_ element: Item) async -> ActionResult<EquatableVoid> {
+        deleteItemResult
     }
 }

@@ -19,6 +19,12 @@ struct ItemsTests {
             reducer: ToggleableListReducer(useCase: useCaseMock)
         )
     }()
+    private lazy var itemsReducerStore: ItemsStore<ItemsReducer<ItemsUseCaseMock>> = {
+        TestStore(
+            initialState: .init(listName: "Test list"),
+            reducer: ItemsReducer(useCase: useCaseMock)
+        )
+    }()
     private var useCaseMock = ItemsUseCaseMock()
     private let itemsMock = ItemMock.items
 
@@ -69,6 +75,29 @@ struct ItemsTests {
 
         await store.receive(.voidResult(useCaseMock.updateItemResult)) {
             $0.viewState == .idle
+        }
+    }
+
+    @Test("Did delete item removes it from state")
+    mutating func testOnDidDeleteItem() async {
+        givenASuccessItemsFetch()
+
+        let item = itemsMock[0]
+
+        await itemsReducerStore.send(.shared(.onAppear)) {
+            $0.shared.viewState == .loading
+        }
+
+        await itemsReducerStore.receive(.shared(.fetchItemsResult(useCaseMock.fetchItemsResult))) { [itemsMock] in
+            $0.shared.viewState == .idle && $0.shared.items == itemsMock
+        }
+
+        await itemsReducerStore.send(.didDeleteItem(item.id)) {
+            !$0.shared.items.contains(item)
+        }
+
+        await itemsReducerStore.receive(.deleteItemResult(useCaseMock.deleteItemResult)) {
+            $0.shared.viewState == .idle
         }
     }
 

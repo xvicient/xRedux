@@ -1,15 +1,14 @@
 import Foundation
 import xRedux
 
-/// Manages the grocery lists. Reuses the shared fetch/toggle logic from ToggleableListReducer
-/// and adds the one action Items doesn't need: selecting a list to navigate into its items.
-/// Generic over UseCase so tests can inject a mock while production uses ListsUseCase.
+/// Grocery lists screen. Wraps ToggleableListReducer and adds the  action
+/// sharing a list's name.
 struct ListsReducer<UseCase: ListsUseCaseApi>: Reducer {
     typealias State = ToggleableListReducer<UseCase>.State
 
     enum Action: Equatable, Sendable {
         case shared(ToggleableListReducer<UseCase>.Action)
-        case didSelectList(UUID)
+        case didTapShare(UUID)
     }
 
     private let sharedReducer: ToggleableListReducer<UseCase>
@@ -26,9 +25,8 @@ struct ListsReducer<UseCase: ListsUseCaseApi>: Reducer {
         case .shared(let sharedAction):
             return sharedReducer.reduce(&state, sharedAction).map { .shared($0) }
 
-        case .didSelectList:
-            // Navigation itself is handled by ListsView (see navigationDestination(item:)).
-            // This action is the extension point Items doesn't have.
+        case .didTapShare:
+            // ListsView's ShareLink handles presentation; this is just the hook for it.
             return .none
         }
     }

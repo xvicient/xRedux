@@ -45,6 +45,11 @@
 			path = GroceryAppTests;
 			sourceTree = "<group>";
 		};
+		D6EFB9992D94110300EB8C99 /* GroceryAppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GroceryAppUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +84,7 @@
 			children = (
 				D6EFB4D82D94110200EB8C55 /* GroceryApp */,
 				D6EFB4E92D94110300EB8C55 /* GroceryAppTests */,
+				D6EFB9992D94110300EB8C99 /* GroceryAppUITests */,
 				D6EFB4D72D94110200EB8C55 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -155,6 +161,9 @@
 			);
 			dependencies = (
 				D6EFB4F22D94110300EB8C55 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D6EFB9992D94110300EB8C99 /* GroceryAppUITests */,
 			);
 			name = GroceryAppUITests;
 			packageProductDependencies = (

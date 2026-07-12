@@ -7,8 +7,7 @@ protocol ToggleableItem: Identifiable, Equatable, Sendable where ID == UUID {
     var completed: Bool { get set }
 }
 
-/// Use case requirements shared by any feature that fetches a list of rows and lets the user
-/// toggle each row's completion state
+/// Use case for fetching a list of rows and toggling each row's completion state
 protocol ToggleableUseCaseApi {
     associatedtype Element: ToggleableItem
 
@@ -16,8 +15,7 @@ protocol ToggleableUseCaseApi {
     func updateElement(_ element: Element) async -> ActionResult<EquatableVoid>
 }
 
-/// Reducer shared by any feature that is "a list of rows the user can mark as completed"
-/// (e.g. the items of a grocery list, or the grocery lists themselves)
+/// Reducer for "a list of rows the user can mark as completed" (grocery lists, or their items)
 struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
     typealias Element = UseCase.Element
 
@@ -51,6 +49,11 @@ struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
     ) -> Effect<Action> {
         switch (state.viewState, action) {
         case (.idle, .onAppear):
+            // Only fetch once - re-appearing would otherwise re-fetch and wipe out local
+            // changes, e.g. a list just marked completed.
+            guard state.items.isEmpty else {
+                return .none
+            }
             state.viewState = .loading
             return .publish(
                 useCase.fetchElements()

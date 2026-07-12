@@ -72,8 +72,37 @@ struct ListsTests {
         }
     }
 
-    @Test("Did select list leaves state untouched")
-    mutating func testOnDidSelectList() async {
+    @Test("Re-appearing after a successful fetch does not re-fetch and lose local changes")
+    mutating func testOnAppearAgainDoesNotRefetch() async {
+        givenASuccessListsFetch()
+
+        var list = listsMock[0]
+        list.completed.toggle()
+
+        await store.send(.shared(.onAppear)) {
+            $0.viewState == .loading
+        }
+
+        await store.receive(.shared(.fetchItemsResult(useCaseMock.fetchListsResult))) {
+            $0.viewState == .idle
+        }
+
+        await store.send(.shared(.didTapItem(list.id))) {
+            $0.viewState == .idle && $0.items[0].completed == list.completed
+        }
+
+        await store.receive(.shared(.voidResult(useCaseMock.updateListResult))) {
+            $0.viewState == .idle
+        }
+
+        // Simulates popping back to the root, which re-sends onAppear.
+        await store.send(.shared(.onAppear)) {
+            $0.viewState == .idle && $0.items[0].completed == list.completed
+        }
+    }
+
+    @Test("Did tap share leaves state untouched")
+    mutating func testOnDidTapShare() async {
         givenASuccessListsFetch()
 
         await store.send(.shared(.onAppear)) {
@@ -84,7 +113,7 @@ struct ListsTests {
             $0.viewState == .idle
         }
 
-        await store.send(.didSelectList(listsMock[0].id)) {
+        await store.send(.didTapShare(listsMock[0].id)) {
             $0.viewState == .idle
         }
     }
