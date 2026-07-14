@@ -2,7 +2,7 @@ import Combine
 import xRedux
 
 protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item {
-    func deleteElement(_ element: Item) async -> ActionResult<EquatableVoid>
+    func deleteElement(_ element: Item) async -> VoidResult
 }
 
 struct ItemsUseCase: ItemsUseCaseApi {
@@ -22,12 +22,12 @@ struct ItemsUseCase: ItemsUseCaseApi {
         .eraseToAnyPublisher()
     }
 
-    func updateElement(_ element: Item) async -> ActionResult<EquatableVoid> {
+    func updateElement(_ element: Item) async -> VoidResult {
         // Simulates a network call.
         .success()
     }
 
-    func deleteElement(_ element: Item) async -> ActionResult<EquatableVoid> {
+    func deleteElement(_ element: Item) async -> VoidResult {
         // Simulates a network call.
         .success()
     }

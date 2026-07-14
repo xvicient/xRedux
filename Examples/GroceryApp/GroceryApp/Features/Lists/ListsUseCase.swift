@@ -14,7 +14,7 @@ struct ListsUseCase: ListsUseCaseApi {
         .eraseToAnyPublisher()
     }
 
-    func updateElement(_ element: GroceryList) async -> ActionResult<EquatableVoid> {
+    func updateElement(_ element: GroceryList) async -> VoidResult {
         // Simulates a network call.
         .success()
     }

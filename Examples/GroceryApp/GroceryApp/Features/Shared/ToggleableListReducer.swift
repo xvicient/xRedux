@@ -12,7 +12,7 @@ protocol ToggleableUseCaseApi {
     associatedtype Element: ToggleableItem
 
     func fetchElements() -> AnyPublisher<[Element], Error>
-    func updateElement(_ element: Element) async -> ActionResult<EquatableVoid>
+    func updateElement(_ element: Element) async -> VoidResult
 }
 
 /// Reducer for "a list of rows the user can mark as completed" (grocery lists, or their items)
@@ -23,7 +23,7 @@ struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
         case onAppear
         case didTapItem(Element.ID)
         case fetchItemsResult(ActionResult<[Element]>)
-        case voidResult(ActionResult<EquatableVoid>)
+        case voidResult(VoidResult)
     }
 
     struct State {

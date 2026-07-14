@@ -6,7 +6,7 @@ import xRedux
 class ListsUseCaseMock: ListsUseCaseApi {
 
     var fetchListsResult: ActionResult<[GroceryList]>!
-    var updateListResult: ActionResult<EquatableVoid> = .success()
+    var updateListResult: VoidResult = .success()
 
     func fetchElements() -> AnyPublisher<[GroceryList], Error> {
         switch fetchListsResult! {
@@ -17,7 +17,7 @@ class ListsUseCaseMock: ListsUseCaseApi {
         }
     }
 
-    func updateElement(_ element: GroceryList) async -> ActionResult<EquatableVoid> {
+    func updateElement(_ element: GroceryList) async -> VoidResult {
         updateListResult
     }
 }

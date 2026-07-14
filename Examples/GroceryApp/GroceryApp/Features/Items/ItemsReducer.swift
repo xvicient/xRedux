@@ -16,7 +16,7 @@ struct ItemsReducer<UseCase: ItemsUseCaseApi>: Reducer {
     enum Action: Equatable, Sendable {
         case shared(ToggleableListReducer<UseCase>.Action)
         case didDeleteItem(UUID)
-        case deleteItemResult(ActionResult<EquatableVoid>)
+        case deleteItemResult(VoidResult)
     }
 
     private let useCase: UseCase
