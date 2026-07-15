@@ -1,4 +1,4 @@
-[![Swift 6](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org) [![Platform](https://img.shields.io/badge/Platform-iOS_17+-blue.svg)](https://developer.apple.com/ios/) [![License](https://img.shields.io/badge/License-Proprietary-lightgrey.svg)](LICENSE)
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org) [![Platform](https://img.shields.io/badge/Platform-iOS_17+-blue.svg)](https://developer.apple.com/ios/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 # xRedux
 
@@ -38,6 +38,8 @@ Xavier Vicient Manteca
 
 [GitHub](https://github.com/xvicient) • [LinkedIn](https://www.linkedin.com/in/xvicient/)
 
-## © License
+## License
 
-This project is proprietary software. All rights reserved © 2025 Xavier Vicient Manteca. Unauthorized distribution is prohibited.
+Released under the MIT License. See [LICENSE](LICENSE) for details.
+
+© 2025 Xavier Vicient Manteca
