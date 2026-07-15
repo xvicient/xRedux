@@ -10,7 +10,7 @@ To use `xRedux` in your Swift project, you can add it as a dependency using Swif
 1. Open your `Package.swift` file.
 2. Add `xRedux` to the dependencies array:
    ```swift
-   .package(url: "https://github.com/xvicient/xRedux.git", from: "1.0.0")
+   .package(url: "https://github.com/xvicient/xRedux.git", from: "2.0.0")
    ```
 3. Add `xRedux` to your target's dependencies:
    ```swift
