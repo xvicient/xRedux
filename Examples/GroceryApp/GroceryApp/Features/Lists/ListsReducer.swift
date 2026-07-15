@@ -23,7 +23,7 @@ struct ListsReducer<UseCase: ListsUseCaseApi>: Reducer {
     ) -> Effect<Action> {
         switch action {
         case .shared(let sharedAction):
-            return sharedReducer.reduce(&state, sharedAction).map { .shared($0) }
+            return sharedReducer.reduce(&state, sharedAction).map(Action.shared)
 
         case .didTapShare:
             // ListsView's ShareLink handles presentation; this is just the hook for it.

@@ -32,7 +32,7 @@ struct ItemsReducer<UseCase: ItemsUseCaseApi>: Reducer {
     ) -> Effect<Action> {
         switch action {
         case .shared(let sharedAction):
-            return sharedReducer.reduce(&state.shared, sharedAction).map { .shared($0) }
+            return sharedReducer.reduce(&state.shared, sharedAction).map(Action.shared)
 
         case .didDeleteItem(let id):
             guard let index = state.shared.items.firstIndex(where: { $0.id == id }) else {

@@ -4,7 +4,19 @@ Plan de trabajo para corregir las 7 debilidades identificadas en la revisión.
 Ordenado por **retorno / esfuerzo**: primero lo barato y de alto impacto, al final lo
 estructural.
 
-Leyenda de estado: ⬜ pendiente · 🟡 en progreso · ✅ hecho
+Leyenda de estado: ⬜ pendiente · 🟡 en progreso · ✅ hecho · ⏭️ saltado
+
+## Estado final
+
+| # | Punto | Estado |
+|---|-------|--------|
+| 1 | TestStore sin `precondition` (Swift Testing) | ✅ |
+| 2 | `receive` sin polling (hook determinista) | ✅ |
+| 3 | Cancelación interna de efectos (deinit) | ✅ |
+| 4 | `ActionResult` con error tipado | ✅ |
+| 5 | `AppAlert` id único + binding de dismiss | ✅ |
+| 6 | Composición (`Scope`) | ⏭️ no compensa |
+| 7 | Inyección de dependencias | ✅ ya satisfecho |
 
 ---
 
@@ -145,7 +157,7 @@ el setter vacío → un dismiss del sistema deja estado obsoleto.
 
 ---
 
-## 6. Composición de reducers: helper `Scope`/pullback ⬜
+## 6. Composición de reducers: helper `Scope`/pullback ⏭️ (saltado)
 
 **Problema.** La composición es manual: `sharedReducer.reduce(&state.shared, a).map { .shared($0) }`.
 Funciona, pero el boilerplate crece con cada feature anidada.
@@ -155,40 +167,36 @@ Funciona, pero el boilerplate crece con cada feature anidada.
 - Refactor de ejemplo en `Examples/GroceryApp/.../ItemsReducer.swift`,
   `ListsReducer.swift`.
 
-**Enfoque.**
-- Añadir un helper de scoping que dado un `WritableKeyPath` al sub-estado y un
-  `CasePath`/embed+extract para la sub-acción, ejecute el child reducer y haga el `.map`
-  automáticamente. Sin dependencias externas → implementar un mini "case path"
-  (embed: `(ChildAction) -> Action`, extract: `(Action) -> ChildAction?`).
-- Refactorizar `ItemsReducer`/`ListsReducer` para usarlo y validar la ergonomía.
+**Decisión tomada: SALTADO.** Con el estilo de `switch` a mano de esta librería, un helper
+`Scope` no reduce boilerplate (los dos sitios de composición son one-liners; el `case` ya
+extrae el sub-action). Un `Scope` con valor real exigiría un mecanismo de composición
+declarativa (`body`-style), que es superficie de API nueva y especulativa. No compensa.
 
-**Criterio de aceptación.**
-- El ejemplo compila usando el helper con menos boilerplate y mismo comportamiento.
-- Tests del `GroceryApp` siguen verdes.
-
-**Tests de regresión.** Test del helper de scope (acción del hijo modifica sub-estado;
-acción ajena se ignora).
+**Único cleanup aplicado:** `.map { .shared($0) }` → `.map(Action.shared)` en
+`ItemsReducer`/`ListsReducer` (usar el case como función).
 
 ---
 
-## 7. Inyección de dependencias ⬜
+## 7. Inyección de dependencias ✅ (ya satisfecho por el diseño actual)
 
-**Problema.** Las dependencias (use cases) se pasan a mano por `init`. Sin environment ni
-override para tests → mocks manuales. Es el cambio más estructural.
+**Problema (revisado).** La crítica original ("no hay DI story") estaba exagerada. El código
+**ya** hace inyección por constructor con dependencias tras protocolo.
 
-**Archivos.**
-- `Sources/xRedux/` (nuevo mecanismo de dependencias)
-- Refactor de use cases del `GroceryApp`.
+**Decisión tomada:** opción A — **environment explícito**. Y resulta que el diseño actual
+ya *es* la opción A:
+- Los reducers son genéricos sobre el use case tras protocolo
+  (`ItemsReducer<UseCase: ItemsUseCaseApi>`); la dependencia es una propiedad tipada.
+- Se instancia en la raíz de composición (builders / `Coordinator`) e se inyecta por `init`.
+- Los tests sustituyen con mocks construyendo el reducer con ellos
+  (`ItemsReducer(useCase: ItemsUseCaseMock())`).
+- Ningún reducer tira de un global ni instancia su propia dependencia.
 
-**Decisión tomada:** opción A — **environment explícito**. Dependencias como propiedad
-tipada del reducer; override en tests construyendo el reducer con mocks. Simple, sin magia,
-encaja con el diseño actual.
+**Conclusión.** No hay trabajo que hacer sin caer en ceremonia (agrupar una única
+dependencia en un `Environment`) o en la opción B (registro global) que se descartó.
 
-**Criterio de aceptación.**
-- Un reducer puede resolver dependencias sin conocer implementaciones concretas.
-- En tests se inyectan mocks sin construir todo el grafo a mano.
-
-**Tests de regresión.** Reducer con dependencia mockeada verificando efecto.
+**Criterio de aceptación (ya cumplido).**
+- Un reducer resuelve dependencias sin conocer implementaciones concretas (vía protocolo). ✅
+- En tests se inyectan mocks sin construir todo el grafo. ✅ (ver `ItemsTests`/`ListsTests`)
 
 ---
 
