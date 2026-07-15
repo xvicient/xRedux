@@ -4,6 +4,6 @@ public struct EquatableVoid: Equatable, Sendable {
     public init() {}
 }
 
-/// Convenience alias for an action result that carries no payload
-/// Use instead of `ActionResult<EquatableVoid>` to reduce noise at call sites
-public typealias VoidResult = ActionResult<EquatableVoid>
+/// Convenience alias for an action result that carries no success payload.
+/// Use instead of `ActionResult<EquatableVoid, Failure>` to reduce noise at call sites.
+public typealias VoidResult<Failure: Error> = ActionResult<EquatableVoid, Failure>

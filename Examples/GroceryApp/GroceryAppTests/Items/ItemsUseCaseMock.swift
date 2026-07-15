@@ -5,24 +5,18 @@ import xRedux
 
 class ItemsUseCaseMock: ItemsUseCaseApi {
 
-    var fetchItemsResult: ActionResult<[Item]>!
-    var updateItemResult: VoidResult = .success()
-    var deleteItemResult: VoidResult = .success()
+    var fetchItemsResult: ActionResult<[Item], ItemsError>!
 
-    func fetchElements() -> AnyPublisher<[Item], Error> {
+    func fetchElements() -> AnyPublisher<[Item], ItemsError> {
         switch fetchItemsResult! {
         case .success(let items):
-            return Just(items).setFailureType(to: Error.self).eraseToAnyPublisher()
+            return Just(items).setFailureType(to: ItemsError.self).eraseToAnyPublisher()
         case .failure(let error):
             return Fail(error: error).eraseToAnyPublisher()
         }
     }
 
-    func updateElement(_ element: Item) async -> VoidResult {
-        updateItemResult
-    }
+    func updateElement(_ element: Item) async {}
 
-    func deleteElement(_ element: Item) async -> VoidResult {
-        deleteItemResult
-    }
+    func deleteElement(_ element: Item) async {}
 }

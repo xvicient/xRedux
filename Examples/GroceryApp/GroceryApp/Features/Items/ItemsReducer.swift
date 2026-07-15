@@ -16,7 +16,6 @@ struct ItemsReducer<UseCase: ItemsUseCaseApi>: Reducer {
     enum Action: Equatable, Sendable {
         case shared(ToggleableListReducer<UseCase>.Action)
         case didDeleteItem(UUID)
-        case deleteItemResult(VoidResult)
     }
 
     private let useCase: UseCase
@@ -40,12 +39,10 @@ struct ItemsReducer<UseCase: ItemsUseCaseApi>: Reducer {
                 return .none
             }
             let item = state.shared.items.remove(at: index)
-            return .task { send in
-                await send(.deleteItemResult(useCase.deleteElement(item)))
+            // Fire-and-forget: the item is already removed from state above.
+            return .task { _ in
+                await useCase.deleteElement(item)
             }
-
-        case .deleteItemResult:
-            return .none
         }
     }
 }

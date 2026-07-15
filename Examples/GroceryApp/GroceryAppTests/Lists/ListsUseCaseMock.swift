@@ -5,19 +5,16 @@ import xRedux
 
 class ListsUseCaseMock: ListsUseCaseApi {
 
-    var fetchListsResult: ActionResult<[GroceryList]>!
-    var updateListResult: VoidResult = .success()
+    var fetchListsResult: ActionResult<[GroceryList], ListsError>!
 
-    func fetchElements() -> AnyPublisher<[GroceryList], Error> {
+    func fetchElements() -> AnyPublisher<[GroceryList], ListsError> {
         switch fetchListsResult! {
         case .success(let lists):
-            return Just(lists).setFailureType(to: Error.self).eraseToAnyPublisher()
+            return Just(lists).setFailureType(to: ListsError.self).eraseToAnyPublisher()
         case .failure(let error):
             return Fail(error: error).eraseToAnyPublisher()
         }
     }
 
-    func updateElement(_ element: GroceryList) async -> VoidResult {
-        updateListResult
-    }
+    func updateElement(_ element: GroceryList) async {}
 }

@@ -1,12 +1,17 @@
 import Combine
 import xRedux
 
-protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item {
-    func deleteElement(_ element: Item) async -> VoidResult
+/// Errors specific to the items feature.
+enum ItemsError: Error, Equatable {
+    case fetchFailed
+}
+
+protocol ItemsUseCaseApi: ToggleableUseCaseApi where Element == Item, Failure == ItemsError {
+    func deleteElement(_ element: Item) async
 }
 
 struct ItemsUseCase: ItemsUseCaseApi {
-    func fetchElements() -> AnyPublisher<[Item], Error> {
+    func fetchElements() -> AnyPublisher<[Item], ItemsError> {
         Just([
             Item(name: "Apples", completed: false),
             Item(name: "Bananas", completed: false),
@@ -18,17 +23,15 @@ struct ItemsUseCase: ItemsUseCaseApi {
             Item(name: "Pasta", completed: false),
             Item(name: "Tomatoes", completed: false),
         ])
-        .setFailureType(to: Error.self)
+        .setFailureType(to: ItemsError.self)
         .eraseToAnyPublisher()
     }
 
-    func updateElement(_ element: Item) async -> VoidResult {
+    func updateElement(_ element: Item) async {
         // Simulates a network call.
-        .success()
     }
 
-    func deleteElement(_ element: Item) async -> VoidResult {
+    func deleteElement(_ element: Item) async {
         // Simulates a network call.
-        .success()
     }
 }

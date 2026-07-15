@@ -7,12 +7,15 @@ protocol ToggleableItem: Identifiable, Equatable, Sendable where ID == UUID {
     var completed: Bool { get set }
 }
 
-/// Use case for fetching a list of rows and toggling each row's completion state
+/// Use case for fetching a list of rows and toggling each row's completion state.
+/// The failure type is left to each feature: the shared reducer does not impose a
+/// concrete error. `Equatable`/`Sendable` are required so the resulting actions are too.
 protocol ToggleableUseCaseApi {
     associatedtype Element: ToggleableItem
+    associatedtype Failure: Error & Equatable & Sendable
 
-    func fetchElements() -> AnyPublisher<[Element], Error>
-    func updateElement(_ element: Element) async -> VoidResult
+    func fetchElements() -> AnyPublisher<[Element], Failure>
+    func updateElement(_ element: Element) async
 }
 
 /// Reducer for "a list of rows the user can mark as completed" (grocery lists, or their items)
@@ -22,8 +25,7 @@ struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
     enum Action: Equatable, Sendable {
         case onAppear
         case didTapItem(Element.ID)
-        case fetchItemsResult(ActionResult<[Element]>)
-        case voidResult(VoidResult)
+        case fetchItemsResult(ActionResult<[Element], UseCase.Failure>)
     }
 
     struct State {
@@ -77,16 +79,11 @@ struct ToggleableListReducer<UseCase: ToggleableUseCaseApi>: Reducer {
             }
             state.items[index].completed.toggle()
             let item = state.items[index]
-            return .task { send in
-                await send(
-                    .voidResult(
-                        useCase.updateElement(item)
-                    )
-                )
+            // Fire-and-forget: the optimistic toggle above is the source of truth;
+            // we don't act on the update's outcome.
+            return .task { _ in
+                await useCase.updateElement(item)
             }
-
-        case (_, .voidResult):
-            return .none
 
         default:
             print("No matching ViewState and Action")

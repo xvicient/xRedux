@@ -9,10 +9,6 @@ struct ListsTests {
 
     private typealias ListsStore<R: Reducer> = TestStore<R.State, R.Action>
 
-    private enum UseCaseError: Error {
-        case error
-    }
-
     private lazy var store: ListsStore<ListsReducer<ListsUseCaseMock>> = {
         TestStore(
             initialState: .init(),
@@ -63,12 +59,9 @@ struct ListsTests {
             $0.viewState == .idle
         }
 
+        // The toggle is optimistic and fire-and-forget: no result action follows.
         await store.send(.shared(.didTapItem(list.id))) {
             $0.viewState == .idle && $0.items[0].completed == list.completed
-        }
-
-        await store.receive(.shared(.voidResult(useCaseMock.updateListResult))) {
-            $0.viewState == .idle
         }
     }
 
@@ -89,10 +82,6 @@ struct ListsTests {
 
         await store.send(.shared(.didTapItem(list.id))) {
             $0.viewState == .idle && $0.items[0].completed == list.completed
-        }
-
-        await store.receive(.shared(.voidResult(useCaseMock.updateListResult))) {
-            $0.viewState == .idle
         }
 
         // Simulates popping back to the root, which re-sends onAppear.
@@ -128,6 +117,6 @@ extension ListsTests {
     }
 
     fileprivate func givenAFailureListsFetch() {
-        useCaseMock.fetchListsResult = .failure(UseCaseError.error)
+        useCaseMock.fetchListsResult = .failure(ListsError.fetchFailed)
     }
 }

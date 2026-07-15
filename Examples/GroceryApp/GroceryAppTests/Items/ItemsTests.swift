@@ -9,10 +9,6 @@ struct ItemsTests {
 
     private typealias ItemsStore<R: Reducer> = TestStore<R.State, R.Action>
 
-    private enum UseCaseError: Error {
-        case error
-    }
-
     private lazy var store: ItemsStore<ToggleableListReducer<ItemsUseCaseMock>> = {
         TestStore(
             initialState: .init(),
@@ -69,12 +65,9 @@ struct ItemsTests {
             $0.viewState == .idle
         }
 
+        // The toggle is optimistic and fire-and-forget: no result action follows.
         await store.send(.didTapItem(item.id)) {
             $0.viewState == .idle && $0.items[0].completed == item.completed
-        }
-
-        await store.receive(.voidResult(useCaseMock.updateItemResult)) {
-            $0.viewState == .idle
         }
     }
 
@@ -92,12 +85,9 @@ struct ItemsTests {
             $0.shared.viewState == .idle && $0.shared.items == itemsMock
         }
 
+        // Deletion is optimistic and fire-and-forget: no result action follows.
         await itemsReducerStore.send(.didDeleteItem(item.id)) {
             !$0.shared.items.contains(item)
-        }
-
-        await itemsReducerStore.receive(.deleteItemResult(useCaseMock.deleteItemResult)) {
-            $0.shared.viewState == .idle
         }
     }
 
@@ -111,6 +101,6 @@ extension ItemsTests {
     }
 
     fileprivate func givenAFailureItemsFetch() {
-        useCaseMock.fetchItemsResult = .failure(UseCaseError.error)
+        useCaseMock.fetchItemsResult = .failure(ItemsError.fetchFailed)
     }
 }

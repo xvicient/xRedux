@@ -34,7 +34,8 @@ let package = Package(
         .testTarget(
             name: "xReduxTests",
             dependencies: [
-                "xRedux"
+                "xRedux",
+                "xReduxTest"
             ],
             path: "Tests/xReduxTests"
         )

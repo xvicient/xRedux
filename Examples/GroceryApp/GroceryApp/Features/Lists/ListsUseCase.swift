@@ -1,21 +1,25 @@
 import Combine
 import xRedux
 
-protocol ListsUseCaseApi: ToggleableUseCaseApi where Element == GroceryList {}
+/// Errors specific to the lists feature.
+enum ListsError: Error, Equatable {
+    case fetchFailed
+}
+
+protocol ListsUseCaseApi: ToggleableUseCaseApi where Element == GroceryList, Failure == ListsError {}
 
 struct ListsUseCase: ListsUseCaseApi {
-    func fetchElements() -> AnyPublisher<[GroceryList], Error> {
+    func fetchElements() -> AnyPublisher<[GroceryList], ListsError> {
         Just([
             GroceryList(name: "Weekly groceries", completed: false),
             GroceryList(name: "Party supplies", completed: false),
             GroceryList(name: "Pharmacy", completed: false),
         ])
-        .setFailureType(to: Error.self)
+        .setFailureType(to: ListsError.self)
         .eraseToAnyPublisher()
     }
 
-    func updateElement(_ element: GroceryList) async -> VoidResult {
+    func updateElement(_ element: GroceryList) async {
         // Simulates a network call.
-        .success()
     }
 }
