@@ -1,17 +1,22 @@
 import xRedux
 
-/// A test implementation of the Reducer protocol used for testing Redux state management
-/// This class allows tracking state changes and action processing during tests
-class TestReducer<State, Action>: Reducer where Action: Equatable {
+/// A test implementation of the Reducer protocol used for testing Redux state management.
+/// It wraps the real reduce function, tracks the latest action/state, and lets
+/// `TestStore.receive` await effect-produced actions deterministically (no polling).
+@MainActor
+final class TestReducer<State, Action>: Reducer where Action: Equatable {
 
     /// The actual reduce function that processes actions and updates state
-	private let reduce: (inout State, Action) -> Effect<Action>
+	private let reduceFunction: (inout State, Action) -> Effect<Action>
     /// The most recent action processed by the reducer
 	var expectedAction: Action?
     /// The expected state after processing an action
 	var expectedState: State
-    /// A tuple containing an expected action and a closure to execute when that action is received
-	var expectedResult: (Action, () -> Void)?
+
+    /// Actions already processed but not yet consumed by a `receive`.
+	private var buffer: [Action] = []
+    /// A pending `receive` waiting for a specific action.
+	private var waiter: (action: Action, resume: (Bool) -> Void)?
 
     /// Creates a new test reducer
     /// - Parameters:
@@ -21,36 +26,61 @@ class TestReducer<State, Action>: Reducer where Action: Equatable {
 		reduce: @escaping (inout State, Action) -> Effect<Action>,
 		initialState: State
 	) {
-		self.reduce = reduce
+		self.reduceFunction = reduce
 		self.expectedState = initialState
 	}
 
-    /// Processes an action and updates the state
-    /// Also tracks the action and state changes for test verification
-    /// - Parameters:
-    ///   - state: The current state to modify
-    ///   - action: The action to process
-    /// - Returns: An effect that describes any side effects that should occur
+    /// Processes an action, updates the state, and routes the action to a waiting
+    /// `receive` (or buffers it for a later one).
 	func reduce(
 		_ state: inout State,
 		_ action: Action
 	) -> Effect<Action> {
 		expectedState = state
 		expectedAction = action
-		let effect = reduce(&expectedState, action)
+		let effect = reduceFunction(&expectedState, action)
 		state = expectedState
 
-		matchExpectedAction(action)
+		deliver(action)
 
 		return effect
 	}
 
-    /// Checks if an action matches the expected action and executes the associated closure if it does
-    /// - Parameter action: The action to check
-    func matchExpectedAction(_ action: Action) {
-		guard expectedResult?.0 == action else {
-			return
+    /// Routes a processed action to a waiting `receive`, or buffers it.
+	private func deliver(_ action: Action) {
+		if let waiter, waiter.action == action {
+			self.waiter = nil
+			waiter.resume(true)
 		}
-		expectedResult?.1()
+		else {
+			buffer.append(action)
+		}
+	}
+
+    /// Discards a directly-sent action from the buffer, so `receive` only ever
+    /// observes actions produced by effects.
+	func consumeSent(_ action: Action) {
+		if let index = buffer.lastIndex(of: action) {
+			buffer.remove(at: index)
+		}
+	}
+
+    /// Suspends until `action` is processed. Returns `true` when matched, or `false`
+    /// if the wait was released without a match (e.g. by a timeout).
+	func waitForAction(_ action: Action) async -> Bool {
+		if let index = buffer.firstIndex(of: action) {
+			buffer.removeFirst(index + 1)
+			return true
+		}
+		return await withCheckedContinuation { continuation in
+			waiter = (action, { matched in continuation.resume(returning: matched) })
+		}
+	}
+
+    /// Releases a pending wait without a match, so a timed-out `receive` can finish.
+	func cancelWait() {
+		guard let waiter else { return }
+		self.waiter = nil
+		waiter.resume(false)
 	}
 }

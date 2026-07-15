@@ -49,9 +49,14 @@ public final class TestStore<State, Action> where Action: Equatable {
 				sourceLocation: sourceLocation
 			)
 		}
+
+		// A directly-sent action is asserted here; keep it out of `receive`'s view.
+		reducer.consumeSent(action)
 	}
 
     /// Waits for an action produced by an effect and asserts the resulting state.
+    /// The happy path is fully deterministic (no polling); the timeout only races a
+    /// sleep on the failure path.
     /// - Parameters:
     ///   - milliseconds: Maximum time to wait before recording a timeout.
     ///   - action: The action expected to arrive from an effect.
@@ -63,27 +68,7 @@ public final class TestStore<State, Action> where Action: Equatable {
 		assert expectation: @escaping (_ state: State) -> Bool,
 		sourceLocation: SourceLocation = #_sourceLocation
 	) async {
-		var assertionPassed = false
-		var expectedResultReceived = false
-		var elapsedMilliseconds = 0
-		let paceMilliseconds = 100
-
-		reducer.expectedResult = (
-			action,
-			{ [weak self] in
-				guard let self else { return }
-				assertionPassed =
-					reducer.expectedAction == action && expectation(reducer.expectedState)
-				expectedResultReceived = true
-			}
-		)
-
-		while !expectedResultReceived && elapsedMilliseconds < milliseconds {
-			elapsedMilliseconds += paceMilliseconds
-			try? await Task.sleep(nanoseconds: UInt64(paceMilliseconds) * 1_000_000)
-		}
-
-		guard expectedResultReceived else {
+		guard await waitForAction(action, milliseconds: milliseconds) else {
 			Issue.record(
 				"Timed out after \(milliseconds)ms waiting to receive \(action)",
 				sourceLocation: sourceLocation
@@ -91,11 +76,31 @@ public final class TestStore<State, Action> where Action: Equatable {
 			return
 		}
 
-		if !assertionPassed {
+		if reducer.expectedAction != action {
+			Issue.record(
+				"Expected to receive \(action) but the reducer processed \(String(describing: reducer.expectedAction))",
+				sourceLocation: sourceLocation
+			)
+		}
+
+		if !expectation(reducer.expectedState) {
 			Issue.record(
 				"State assertion failed after receiving \(action)",
 				sourceLocation: sourceLocation
 			)
 		}
+	}
+
+    /// Awaits the reducer's hook for `action`. A timeout task releases the wait if the
+    /// action never arrives. Returns `true` when received, `false` on timeout.
+    private func waitForAction(_ action: Action, milliseconds: Int) async -> Bool {
+		let timeout = Task { [reducer] in
+			try? await Task.sleep(nanoseconds: UInt64(milliseconds) * 1_000_000)
+			// If we get here without being cancelled, the action never arrived.
+			reducer.cancelWait()
+		}
+		defer { timeout.cancel() }
+
+		return await reducer.waitForAction(action)
 	}
 }

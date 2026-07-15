@@ -35,7 +35,7 @@ un `send` con expectativa correcta pasa; una incorrecta reporta fallo (no crash)
 
 ---
 
-## 2. `TestStore.receive`: eliminar el polling con `Task.sleep` ⬜
+## 2. `TestStore.receive`: eliminar el polling con `Task.sleep` ✅
 
 **Problema.** `receive` hace un bucle de `Task.sleep(100ms)` hasta 5s esperando el efecto
 async. Es lento y no determinista.
@@ -62,37 +62,39 @@ async. Es lento y no determinista.
 
 ---
 
-## 3. Cancelación de efectos ⬜
+## 3. Cancelación de efectos (interna) ✅
 
-**Problema.** `.task` hace `Task { … }` y **descarta el handle** → imposible de cancelar.
-`.publish` guarda el cancellable por `UUID` pero no hay API pública para cancelar por
-identidad. Sin cancellation IDs no hay debounce, ni "cancela la búsqueda anterior", ni
-cancelar al desaparecer la vista.
+> **Nota de alcance:** este punto se redujo respecto al plan original. La cancelación
+> por id (debounce, latest-wins) se descartó para no contaminar `Effect`. Queda solo la
+> gestión interna del ciclo de vida de los efectos.
+
+
+**Problema.** `.task` hace `Task { … }` y **descarta el handle** → imposible de cancelar;
+sobrevive al store. `.publish` guardaba el cancellable por `UUID`, pero los tasks no se
+gestionaban.
+
+**Restricción de diseño (decidida durante la implementación).** `Effect` es la superficie
+que ven los reducers: debe quedarse **solo** con `none`/`publish`/`task`. No se exponen
+`cancellable`/`cancel` como cases del enum — un reducer no debe poder ejecutarlos. La
+cancelación es **maquinaria interna del `Store`**. Como corolario, NO hay API pública de
+cancelación por id (debounce / "cancela la búsqueda anterior" queda fuera de alcance por
+ahora; se puede añadir más tarde por un canal que no sea `Effect`).
 
 **Archivos.**
-- `Sources/xRedux/Effect.swift`
-- `Sources/xRedux/Store.swift`
+- `Sources/xRedux/Store.swift` (sin cambios en `Effect.swift`).
 
-**Enfoque.**
-- Añadir identidad de cancelación a `Effect`:
-  - `case cancellable(id: AnyHashable, Effect<Action>)` (o un envoltorio `.cancel(id:)`).
-  - Nuevo caso `case cancel(AnyHashable)` que cancela un efecto en vuelo por id.
-- En `Store`:
-  - Cambiar el diccionario de cancellables a estar **keyed por la id de cancelación**
-    (además del `UUID` interno), de modo que lanzar un efecto con la misma id cancele el
-    anterior.
-  - Guardar el `Task` de `.task` (hoy fire-and-forget) para poder cancelarlo; cancelar en
-    `deinit` del store todos los efectos en vuelo.
-  - Encadenar la cancelación de estructura: cancelar padre → cancelar hijos.
-- Asegurar que `Effect.map` propaga la identidad de cancelación intacta.
+**Enfoque aplicado.**
+- `Store` lleva `running: [UUID: RunningEffect]`, donde `RunningEffect` envuelve una
+  `AnyCancellable` (publish) o un `Task` (task), y ambos saben `cancel()`.
+- Cada efecto se registra al arrancar y se elimina al completarse (completion del
+  publisher / fin del task).
+- `deinit` cancela todo lo que quede en vuelo → nada sobrevive al store.
 
 **Criterio de aceptación.**
-- Un efecto lanzado con id `X` cancela cualquier efecto previo con id `X`.
-- `store.send(.cancel(X))` detiene un efecto en vuelo.
-- Al destruirse el store, no quedan tasks corriendo.
+- Al destruirse el store, no quedan tasks corriendo. ✅
 
-**Tests de regresión.** Test de debounce (dos envíos rápidos con misma id → solo el
-último emite) y test de cancelación explícita.
+**Tests de regresión.** `StoreTests.inFlightTaskCancelledOnDeinit`: un `.task` suspendido
+observa la cancelación (vía `withTaskCancellationHandler`) en cuanto el store se libera.
 
 ---
 
